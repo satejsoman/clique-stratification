@@ -1,4 +1,4 @@
-# clique-stratification
+# graph partition designs for causal inference under network interference
 
 get data from the replication page for [The Diffusion of Microfinance](https://dataverse.harvard.edu/dataset.xhtml?persistentId=hdl:1902.1/21538), and add it to a folder named `data/`
 
