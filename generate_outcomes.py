@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 from networkx.algorithms import community
 
-root = Path(__file__).parent
+try:
+    root = Path(__file__).parent
+except NameError:
+    root = Path.cwd()
 data_dir = root / "data"
 adj_matrices_dir = data_dir / "1. Network Data" / "Adjacency Matrices"
 
@@ -66,14 +69,20 @@ data["D"] = data["leader"] * data["treatment"]
 
 ## covariates
 covariates = ['rooftype1', 'rooftype2', 'rooftype3', 'rooftype4', 'rooftype5', 'room_no', 'bed_no', 'leader', 'electricity_private', 'electricity_government', 'electricity_no', 'latrine_owned', 'latrine_common', 'latrine_none', 'ownrent_0', 'ownrent_owned', 'ownrent_owned_but_shared', 'ownrent_rented', 'ownrent_leased', 'ownrent_given_by_government', 'ownrent_6']
-X = data[covariates].values.astype(int)
+data[covariates] = data[covariates] - data[covariates].mean(axis = 0)
+X = data[covariates].values
 
 ## parameters
 np.random.seed(0)
-beta  = np.random.normal(1, 0.5,    X.shape[1]) # covariates coefficients
-gamma = np.random.normal(0.5, 0.25, X.shape[0]) # direct effects
-kappa = np.random.normal(0.3, 0.15, X.shape[0]) # weak ties
-nu    = np.random.normal(0, 0.5,    X.shape[0]) # idiosyncratic shock
+# beta  = np.random.normal(0,   0.5,  X.shape[1]) # covariates coefficients
+# gamma = np.random.normal(0.5, 0.25, X.shape[0]) # direct effects
+# kappa = np.random.normal(0.3, 0.15, X.shape[0]) # weak ties
+# nu    = np.random.normal(0, 0.5,    X.shape[0]) # idiosyncratic shock
+
+beta      = [0.01 for _ in range(X.shape[1])]
+gamma     = 0.5
+kappa     = 0.3
+intercept = -0.5
 
 DE = [] # direct effects
 WT = [] # weak ties
@@ -86,8 +95,9 @@ for village in G.keys():
 
 data["DE"] = pd.Series(DE).fillna(0)
 data["WT"] = pd.Series(WT).fillna(0)
-data["z"]     = X @ beta + gamma * data["DE"] + kappa * data["WT"]
-data["Y_raw"] = 1/(1 + np.exp(-data["z"] + data["z"].mean()))
+
+data["z"]     = intercept + X @ beta + gamma * data["DE"] + kappa * data["WT"]
+data["Y_raw"] = 1/(1 + np.exp(-data["z"]))
 data["Y"]     = (data["Y_raw"] > 0.5).astype(int)
 
 data.to_csv(root / "outcomes_covars.csv")
