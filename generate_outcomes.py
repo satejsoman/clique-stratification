@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from networkx.algorithms import community
 
-root = Path(__file__).parent.parent
+root = Path(__file__).parent
 data_dir = root / "data"
 adj_matrices_dir = data_dir / "1. Network Data" / "Adjacency Matrices"
 
@@ -32,6 +32,7 @@ for path in adj_matrices_dir.glob(pattern):
     a = np.genfromtxt(path, delimiter = ",")
     g = nx.from_numpy_matrix(a)
     l = nx.floyd_warshall_numpy(g)
+    l[l == np.inf] = 0
 
     # annotate graph with leader indicator and adjust edge weights
     nx.set_node_attributes(g, 
@@ -77,13 +78,16 @@ nu    = np.random.normal(0, 0.5,    X.shape[0]) # idiosyncratic shock
 DE = [] # direct effects
 WT = [] # weak ties
 for village in G.keys():
+    g = G[village]
     l = L[village]
     D = np.fromiter((g.nodes[n]["treatment"] for n in g.nodes), dtype = int)
-    DE.extend( ((l == 1) @ D) / (l == 2).sum(axis = 1) )
+    DE.extend( ((l == 1) @ D) / (l == 1).sum(axis = 1) )
     WT.extend( ((l >= 1) @ D) / (l >= 2).sum(axis = 1) )
 
-data["DE"] = DE
-data["WT"] = WT
-data["z"]     = X @ beta + gamma @ DE + kappa @ WT
-data["Y_raw"] = 1/(1 + np.exp(-data["z"]))
+data["DE"] = pd.Series(DE).fillna(0)
+data["WT"] = pd.Series(WT).fillna(0)
+data["z"]     = X @ beta + gamma * data["DE"] + kappa * data["WT"]
+data["Y_raw"] = 1/(1 + np.exp(-data["z"] + data["z"].mean()))
 data["Y"]     = (data["Y_raw"] > 0.5).astype(int)
+
+data.to_csv(root / "outcomes_covars.csv")
