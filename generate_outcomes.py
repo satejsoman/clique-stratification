@@ -26,7 +26,7 @@ dummies = [
 pattern = "adj_allVillageRelationships_HH_vilno_*.csv"
 regex   = pattern.replace("*", "([0-9]+)")
 
-dataframes = []
+
 A, G, L, delta = {}, {}, {}, {}
 for path in adj_matrices_dir.glob(pattern):
     # load data 
@@ -74,14 +74,10 @@ X = data[covariates].values
 
 ## parameters
 np.random.seed(0)
-# beta  = np.random.normal(0,   0.5,  X.shape[1]) # covariates coefficients
-# gamma = np.random.normal(0.5, 0.25, X.shape[0]) # direct effects
-# kappa = np.random.normal(0.3, 0.15, X.shape[0]) # weak ties
-# nu    = np.random.normal(0, 0.5,    X.shape[0]) # idiosyncratic shock
-
-beta      = [0.01 for _ in range(X.shape[1])]
-gamma     = 0.5
-kappa     = 0.3
+beta  = np.random.normal(0,   0.5,  X.shape[1]) # covariates coefficients
+gamma = np.random.normal(0.5, 0.25, X.shape[0]) # direct effects
+kappa = np.random.normal(0.3, 0.15, X.shape[0]) # weak ties
+nu    = np.random.normal(0, 0.5,    X.shape[0]) # idiosyncratic shock
 intercept = -0.5
 
 DE = [] # direct effects
