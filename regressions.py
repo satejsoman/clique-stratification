@@ -18,10 +18,16 @@ formula  = f"Y_raw ~ {controls} + DE + WT"
 
 reg = smf.logit(formula = formula, data = data).fit()
 reg.summary()
+
+# local regressions
 reg1 = smf.logit(formula = formula, data = T).fit()
 reg1.summary()
 reg0 = smf.logit(formula = formula, data = C).fit()
 reg0.summary()
+
+reg_naive = smf.logit(f"Y_raw_naive ~ {controls} + DE_naive*naive_treatment + WT_naive*naive_treatment", data = data).fit()
+reg_naive.summary()
+print(reg_naive.summary().as_latex())
 
 # sklearn implementations - log-odds unknown, only binary variables observed
 LogisticRegression().fit(T[covars + ["DE", "WT"]], T["Y"]).coef_
